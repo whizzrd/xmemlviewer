@@ -1,10 +1,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
 <head>
+<!-- 
 	<link href="lib/spry/css/SpryDebug.css" rel="stylesheet" type="text/css" />
+ -->
 	<link href="lib/spry/css/SpryAccordion.css" rel="stylesheet" type="text/css" />
 	<style type="text/css">
 		body {
+			background-color: #111111;
+			color: #888888;
 			font-family: sans-serif;
 			font-size: 10px;
 		}
@@ -30,10 +34,10 @@
 			font-weight: bold;
 		}
   		.markers .s1 {
-/* 			margin-bottom: 12px; */
+			margin-bottom: 12px;
   		}
   		.markers .s10 {
-/* 			margin-top: -24px; */
+			margin-top: 24px;
   		}
 		.marker {
 			position: absolute;
@@ -65,7 +69,10 @@
 		}
 		.audio .clip, .audio .clip a, .audio .transition {
 			position: absolute;
+			display: block;
+/* 
 			overflow: hidden;
+ */
 			background-color: #880088;
 			color: #ffffff;
 			height: 12px;
@@ -86,7 +93,7 @@
 			border-bottom: 1px solid #000000;
 		}
 		.audio .track:hover, .audio .track.active, .video .track:hover, .video .track.active {
-			border: 1px solid #666666;
+			border: 1px solid #999999;
 		}
 		.sequence .label, .audio .track .label, .video .track .label {
 			position: fixed;
@@ -108,7 +115,7 @@
 			border: 1px solid #ffff00;
 			border-left: 1px solid #000000;
 		}
-		.video .clips .clip:hover {
+		.audio .clips .clip:hover, .video .clips .clip:hover {
 			border: 1px solid #999900;
 		}
 		.selected {
@@ -118,7 +125,12 @@
 			height: 400px;
 		}
 	</style>
+	<script type="text/javascript" src="lib/jquery/jquery.js"></script>
+	<script type="text/javascript" src="lib/jquery/jquery.mousewheel.js"></script>
+	
+<!-- 
 	<script type="text/javascript" src="lib/spry/js/SpryDebug.js"></script>
+ -->
 	
 	<script type="text/javascript" src="lib/spry/js/xpath.js"></script>
 	<script type="text/javascript" src="lib/spry/js/SpryData.js"></script>
@@ -132,261 +144,336 @@
 <div id="media_viewer">
 </div>
 <div id="xmeml_viewer" class="panel panel-default">
-	<div id="acc0" class="Accordion">
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">File</div>
-			<div class="AccordionPanelContent">
-				<form>
-					<input type="file" name="file" id="file" onchange="xmeml_open(this.value)"/><input type="button" value="reload" onclick="xmeml_open(file.value)" />
+	<div style="width:75%; float: left">
+	
+		<div id="acc0" class="Accordion">
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">File</div>
+				<div class="AccordionPanelContent">
+					<form>
+						<input type="file" name="file" id="file" onchange="xmeml_open(this.value)"/>
+						<input type="button" value="reload" onclick="xmeml_open(file.value)" />
+					</form>
+						
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Sequence</div>
+				<div class="AccordionPanelContent" spry:region="dsSequence dsFrames dsAudioTracks dsAudioClips dsAudioTransitions dsVideoTracks dsVideoClips dsVideoTransitions">
+				  <div class="sequence" style="position: relative; width:{dsSequence::duration}px; overflow: hidden; padding-right:50px">
+					<span class="label">Sequence {dsSequence::ds_RowNumberPlus1} XMEML Viewer: {dsSequence::name} {dsSequence::duration}frames {dsSequence::rate.timebase}FPS <a href="#" onclick="xmeml_debug(); return false">debug</a></span>
+					<div class="label"><a href="#" onclick="acc1.openPanel(0);return false">{dsSequence::name}</div>
+					<div class="markers s10" style="width:{dsSequence::duration}px" spry:repeatchildren="dsFrames">
+						<span spry:if="function::xmeml_frame_s10" class="marker s10" style="left:{dsFrames::frame}px">{function::xmeml_frame_time}</span>
+					</div>
+					<div class="markers s1" style="width:{dsSequence::duration}px">	
+						<span spry:repeat="dsFrames" spry:if="function::xmeml_frame_s10" class="marker s1" style="left:{dsFrames::frame}px">{dsFrames::frame}</span>
+					</div>
+					 <div class="audio" style="width:{dsSequence::duration}px" spry:repeat="dsAudioTracks">
+						<div class="track" style="width:{dsSequence::duration}px" spry:activeClass="active">
+							<div class="label"><a href="#" onclick="dsAudioTracks.setCurrentRow({dsAudioTracks::ds_RowID});acc1.openPanel(1);return false">Audio #{dsAudioTracks::ds_RowNumberPlus1}</a></div>
+							<div class="clips">
+								<span class="clip" style="left:{dsAudioClips::start}px; width:{dsAudioClips::duration}px; z-index:{dsAudioClips::ds_RowNumberPlus1}" spry:repeat="dsAudioClips" title="{dsAudioClips::name}" onclick="dsAudioTracks.setCurrentRow({dsVideoTracks::ds_RowID});dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});acc1.openPanel(2);return false">
+									{dsAudioClips::start}:{dsAudioClips::name}
+								</span>
+							</div>
+							<div class="transitions">
+								<span class="transition" style="left:{dsAudioTransitions::start}px; width:{function::xmeml_video_length}px" spry:repeat="dsAudioTransitions">
+									<a href="#" onclick="return false">{dsAudioTransitions::effect/name}:s{dsAudioTransitions::start}:e{dsAudioTransitions::end}</a>
+								</span>
+							</div>
+						</div>
+					 </div>
+					 <div class="video" style="width:{dsSequence::duration}px" spry:repeat="dsVideoTracks">
+						<div class="track" style="width:{dsSequence::duration}px">
+							<div class="label"><a href="#" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});acc1.openPanel(4);return false">Video #{dsVideoTracks::ds_RowNumberPlus1}</a></div>
+							<div class="clips">
+								<span class="clip" style="left:{dsVideoClips::start}px; width:{dsVideoClips::duration}px; z-index:{dsVideoClips::ds_RowNumberPlus1}" spry:repeat="dsVideoClips" title="{dsVideoClips::name}" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});dsVideoClips.setCurrentRow({dsVideoClips::ds_RowID});acc1.openPanel(4);return false">
+									{dsVideoClips::start}:{dsVideoClips::name}
+								</span>
+							</div>
+							<div class="transitions">
+								<span class="transition" style="left:{dsVideoTransitions::start}px; width:{function::xmeml_video_length}px" spry:repeat="dsVideoTransitions">
+									<a href="#" onclick="return false">{dsAudioTransitions::effect/name}:s{dsVideoTransitions::start}:e{dsVideoTransitions::end}</a>
+								</span>
+							</div>
+						</div>
+					 </div>
+				  </div>
+				</div>
 			</div>
 		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Sequence</div>
-			<div class="AccordionPanelContent" spry:region="dsSequence dsFrames dsAudioTracks dsAudioClips dsAudioTransitions dsVideoTracks dsVideoClips dsVideoTransitions">
-			  Sequence {dsSequence::ds_RowNumberPlus1} XMEML Viewer: {dsSequence::name} {dsSequence::duration}frames {dsSequence::rate.timebase}FPS <button onclick="xmeml_debug()">debug</button>
-			  <div class="sequence" style="position: relative; width:{dsSequence::duration}px; overflow: hidden; padding-right:50px">
-			  	<div class="label"><a href="#" onclick="acc1.openPanel(0);return false">{dsSequence::name}</div>
-			  	<div class="markers s10" style="width:{dsSequence::duration}px" spry:repeatchildren="dsFrames">
-			  		<span spry:if="function::xmeml_frame_s10" class="marker s10" style="left:{dsFrames::frame}px">{function::xmeml_frame_time}</span>
-			  	</div>
-			  	<div class="markers s1" style="width:{dsSequence::duration}px">	
-			  		<span spry:repeat="dsFrames" spry:if="function::xmeml_frame_s10" class="marker s1" style="left:{dsFrames::frame}px">{dsFrames::frame}</span>
-			  	</div>
-			 	 <div class="audio" style="width:{dsSequence::duration}px" spry:repeat="dsAudioTracks">
-					<div class="track" style="width:{dsSequence::duration}px" spry:activeClass="active">
-						<div class="label"><a href="#" onclick="dsAudioTracks.setCurrentRow({dsAudioTracks::ds_RowID});acc1.openPanel(1);return false">Audio #{dsAudioTracks::ds_RowNumberPlus1}</a></div>
-						<div class="clips">
-							<span class="clip" style="left:{dsAudioClips::start}px; width:{dsAudioClips::duration}px; z-index:{dsAudioClips::ds_RowNumberPlus1}" spry:repeat="dsAudioClips" title="{dsAudioClips::name}">
-								<a href="#" onclick="dsAudioTracks.setCurrentRow({dsVideoTracks::ds_RowID});dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});acc1.openPanel(2);return false">{dsAudioClips::start}:{dsAudioClips::name}</a>
-							</span>
-						</div>
-						<div class="transitions">
-							<span class="transition" style="left:{dsAudioTransitions::start}px; width:{function::xmeml_video_length}px" spry:repeat="dsAudioTransitions">
-								<a href="#" onclick="return false">{dsAudioTransitions::effect/name}:s{dsAudioTransitions::start}:e{dsAudioTransitions::end}</a>
-							</span>
-						</div>
-					</div>
-			 	 </div>
-			 	 <div class="video" style="width:{dsSequence::duration}px" spry:repeat="dsVideoTracks">
-			 	 	<div class="track" style="width:{dsSequence::duration}px">
-						<div class="label"><a href="#" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});acc1.openPanel(4);return false">Video #{dsVideoTracks::ds_RowNumberPlus1}</a></div>
-						<div class="clips">
-							<span class="clip" style="left:{dsVideoClips::start}px; width:{dsVideoClips::duration}px; z-index:{dsVideoClips::ds_RowNumberPlus1}" spry:repeat="dsVideoClips" title="{dsVideoClips::name}">
-								<a href="#" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});dsVideoClips.setCurrentRow({dsVideoClips::ds_RowID});acc1.openPanel(6);return false">{dsVideoClips::start}:{dsVideoClips::name}</a>
-							</span>
-						</div>
-						<div class="transitions">
-							<span class="transition" style="left:{dsVideoTransitions::start}px; width:{function::xmeml_video_length}px" spry:repeat="dsVideoTransitions">
-								<a href="#" onclick="return false">{dsAudioTransitions::effect/name}:s{dsVideoTransitions::start}:e{dsVideoTransitions::end}</a>
-							</span>
-						</div>
-					</div>
-			 	 </div>
-			  </div>
+		<div id="acc1" class="Accordion">
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Audio Tracks</div>
+				<div class="AccordionPanelContent">
+					<table class="table table-condensed" spry:region="dsAudioTracks">
+					  <thead>
+						<tr>
+							<th colspan="10">Audio Tracks</th>
+						</tr>
+						<tr>
+						  <th>Type (A/V)</th>
+						  <th>Track (A#/V#)</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_audio_track_index_body" spry:repeatchildren="dsAudioTracks">
+						<tr spry:select="selected" onclick="dsAudioTracks.setCurrentRow({dsAudioTracks::ds_RowID});acc1.openNextPanel();">
+						  <td>Audio</td>
+						  <td>{dsAudioTracks::ds_RowNumberPlus1}</td>
+						  <td><button>clips</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Audio Clips</div>
+				<div class="AccordionPanelContent">
+				   <table class="table table-condensed" spry:region="dsAudioTracks dsAudioClips">
+					  <thead>
+						<tr>
+							<th colspan="10">{dsAudioClips::ds_RowCount} of {dsAudioClips::ds_UnfilteredRowCount} Audio Clips (Track {dsAudioTracks::ds_RowNumberPlus1} of {dsAudioTracks::ds_RowCount})</th>
+						</tr>
+						<tr>
+						  <th>Type (A/V)</th>
+						  <th>Track (A#/V#)</th>
+						  <th>Name</th>
+						  <th>Duration (frames)</th>
+						  <th>Start (frame)</th>
+						  <th>End (frame)</th>
+						  <th>In (frame)</th>
+						  <th>Out (frame)</th>
+						  <th>Rate (fps)</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_audio_clip_index_body" spry:repeatchildren="dsAudioClips">
+						<tr spry:select="selected" onclick="dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});//acc1.openNextPanel()">
+						  <td>Audio</td>
+						  <td>{dsAudioTracks::ds_RowNumberPlus1}</td>
+						  <td>{dsAudioClips::name}&nbsp;</td>
+						  <td>{dsAudioClips::duration}&nbsp;</td>
+						  <td>{dsAudioClips::start}&nbsp;</td>
+						  <td>{dsAudioClips::end}&nbsp;</td>
+						  <td>{dsAudioClips::in}&nbsp;</td>
+						  <td>{dsAudioClips::out}&nbsp;</td>
+						  <td>{dsAudioClips::rate/timebase}&nbsp;</td>
+						  <td><button disabled="disabled">links</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Audio Files</div>
+				<div class="AccordionPanelContent">
+					<table class="table table-condensed" spry:region="dsAudioTracks dsAudioClips dsAudioClipFiles">
+					  <thead>
+						<tr>
+							<th colspan="6">Audio Files</th>
+						</tr>
+						<tr>
+						  <th>#</th>
+						  <th>ID</th>
+						  <th>Name</th>
+						  <th>Duration</th>
+						  <th>Timebase</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_audio_file_index_body">
+						<tr spry:select="selected" onclick="dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});acc1.openNextPanel();" spry:repeat="dsAudioClipFiles">
+						  <td>{dsAudioClipFiles::ds_RowNumberPlus1}</td>
+						  <td>{dsAudioClipFiles::@id}</td>
+						  <td><a href="{dsAudioClipFiles::pathurl}">{dsAudioClipFiles::name}</a></td>
+						  <td>{dsAudioClipFiles::duration}</td>
+						  <td>{dsAudioClipFiles::rate/timebase}</td>
+						  <td><button onclick="xmeml_preview('{dsAudioClipFiles::pathurl}')">...</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Video Tracks</div>
+				<div class="AccordionPanelContent">
+					<table class="table table-condensed" spry:region="dsVideoTracks">
+					  <thead>
+						<tr>
+							<th colspan="10">Video Tracks</th>
+						</tr>
+						<tr>
+						  <th>Type (A/V)</th>
+						  <th>Track (A#/V#)</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_video_track_index_body" spry:repeatchildren="dsVideoTracks">
+						<tr spry:select="selected" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});acc1.openNextPanel();">
+						  <td>Video</td>
+						  <td>{dsVideoTracks::ds_RowNumberPlus1}</td>
+						  <td><button>clips</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Video Clips</div>
+				<div class="AccordionPanelContent">
+				   <table class="table table-condensed" spry:region="dsVideoTracks dsVideoClips">
+					  <thead>
+						<tr>
+							<th colspan="10">{dsVideoClips::ds_RowCount} of {dsVideoClips::ds_UnfilteredRowCount} Video Clips (Track {dsVideoTracks::ds_RowNumberPlus1} of {dsVideoTracks::ds_RowCount})</th>
+						</tr>
+						<tr>
+						  <th>Type (A/V)</th>
+						  <th>Track (A#/V#)</th>
+						  <th>Name</th>
+						  <th>Duration (frames)</th>
+						  <th>Start (frame)</th>
+						  <th>End (frame)</th>
+						  <th>In (frame)</th>
+						  <th>Out (frame)</th>
+						  <th>Rate (fps)</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_video_clip_index_body" spry:repeatchildren="dsVideoClips">
+						<tr spry:select="selected" onclick="dsVideoClips.setCurrentRow({dsVideoClips::ds_RowID});//acc1.openNextPanel()">
+						  <td>Video</td>
+						  <td>{dsVideoTracks::ds_RowNumberPlus1}</td>
+						  <td>{dsVideoClips::name}&nbsp;</td>
+						  <td>{dsVideoClips::duration}&nbsp;</td>
+						  <td>{dsVideoClips::start}&nbsp;</td>
+						  <td>{dsVideoClips::end}&nbsp;</td>
+						  <td>{dsVideoClips::in}&nbsp;</td>
+						  <td>{dsVideoClips::out}&nbsp;</td>
+						  <td>{dsVideoClips::rate/timebase}&nbsp;</td>
+						  <td><button disabled="disabled">links</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
+			</div>
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Video Files</div>
+				<div class="AccordionPanelContent">
+					<table class="table table-condensed" spry:region="dsVideoTracks dsVideoClips dsVideoClipFiles">
+					  <thead>
+						<tr>
+							<th colspan="6">Video Files</th>
+						</tr>
+						<tr>
+						  <th>#</th>
+						  <th>ID</th>
+						  <th>Name</th>
+						  <th>Duration</th>
+						  <th>Timebase</th>
+						  <th>Actions</th>
+						</tr>
+					  </thead>
+					  <tbody id="media_video_file_index_body" spry:repeatchildren="dsVideoClipFiles">
+						<tr spry:select="selected" onclick="dsVideoClipFiles.setCurrentRow({dsVideoClipFiles::ds_RowID});acc1.openNextPanel();">
+						  <td>{dsVideoClipFiles::ds_RowNumberPlus1}</td>
+						  <td>{dsVideoClipFiles::@id}</td>
+						  <td><a href="{dsVideoClipFiles::pathurl}">{dsVideoClipFiles::name}</a></td>
+						  <td>{dsVideoClipFiles::duration}</td>
+						  <td>{dsVideoClipFiles::rate/timebase}</td>
+						  <td><button onclick="xmeml_preview('{dsVideoClipFiles::pathurl}')">...</button></td>
+						</tr>
+					  </tbody>
+					</table>
+				</div>
 			</div>
 		</div>
 	</div>
-	<div id="acc1" class="Accordion">
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Audio Tracks</div>
-			<div class="AccordionPanelContent">
-				<table class="table table-condensed" spry:region="dsAudioTracks">
-				  <thead>
-					<tr>
-						<th colspan="10">Audio Tracks</th>
-					</tr>
-					<tr>
-					  <th>Type (A/V)</th>
-					  <th>Track (A#/V#)</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_audio_track_index_body" spry:repeatchildren="dsAudioTracks">
-					<tr spry:select="selected" onclick="dsAudioTracks.setCurrentRow({dsAudioTracks::ds_RowID});acc1.openNextPanel();">
-					  <td>Audio</td>
-					  <td>{dsAudioTracks::ds_RowNumberPlus1}</td>
-					  <td><button>clips</button></td>
-					</tr>
-				  </tbody>
-				</table>
+	<div style="width:25%; clear: none; float: left">
+		<div id="acc3" class="Accordion">
+			<div class="AccordionPanel" spry:region="dsCursor">
+				<div class="AccordionPanelTab">Cursor: {dsCursor::frame}</div>
+				<div class="AccordionPanelContent" style="background-color: #000000; color: #ffffff; font-size: 36px">
+					C:{dsCursor::clock}<br />
+					A:{dsCursor::audio}<br />
+					V:{dsCursor::video}<br />
+				</div>
 			</div>
 		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Audio Clips</div>
-			<div class="AccordionPanelContent">
-			   <table class="table table-condensed" spry:region="dsAudioTracks dsAudioClips">
-				  <thead>
-					<tr>
-						<th colspan="10">{dsAudioClips::ds_RowCount} of {dsAudioClips::ds_UnfilteredRowCount} Audio Clips (Track {dsAudioTracks::ds_RowNumberPlus1} of {dsAudioTracks::ds_RowCount})</th>
-					</tr>
-					<tr>
-					  <th>Type (A/V)</th>
-					  <th>Track (A#/V#)</th>
-					  <th>Name</th>
-					  <th>Duration (frames)</th>
-					  <th>Start (frame)</th>
-					  <th>End (frame)</th>
-					  <th>In (frame)</th>
-					  <th>Out (frame)</th>
-					  <th>Rate (fps)</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_audio_clip_index_body" spry:repeatchildren="dsAudioClips">
-					<tr spry:select="selected" onclick="dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});acc1.openNextPanel();">
-					  <td>Audio</td>
-					  <td>{dsAudioTracks::ds_RowNumberPlus1}</td>
-					  <td>{dsAudioClips::name}&nbsp;</td>
-					  <td>{dsAudioClips::duration}&nbsp;</td>
-					  <td>{dsAudioClips::start}&nbsp;</td>
-					  <td>{dsAudioClips::end}&nbsp;</td>
-					  <td>{dsAudioClips::in}&nbsp;</td>
-					  <td>{dsAudioClips::out}&nbsp;</td>
-					  <td>{dsAudioClips::rate/timebase}&nbsp;</td>
-					  <td><button disabled="disabled">links</button></td>
-					</tr>
-				  </tbody>
-				</table>
+		<div id="acc2" class="Accordion">
+			<div class="AccordionPanel" spry:region="dsVideoClips dsAudioClipFiles">
+				<div class="AccordionPanelTab">Audio File: {dsAudioClips::name}</div>
+				<div class="AccordionPanelContent" style="background-color: #000000; height: 25px">
+					<audio
+						src="{dsAudioClipFiles::pathurl}"
+						height="25pxs"
+						width="100%"
+						controls
+						crossorigin
+						use-credentials
+						preload="metadata"
+						autoplay
+						no-poster="{dsAudioClipFiles::pathurl}"
+					>
+						<track kind="subtitles" src="{dsAudioClipFiles::pathurl}.en.vtt" srclang="en" label="English">
+						<track kind="subtitles" src="{dsAudioClipFiles::pathurl}.nl.vtt" srclang="sv" label="Nedelands">
+						<object data="{dsAudioClipFiles::pathurl}" type="video/quicktime" width="100%" height="100%">
+							<param name="src" value="{dsAudioClipFiles::pathurl}">
+							<param name="controller" value="true">
+							<param name="scale" value="aspect">
+						</object>
+					</audio>
+				</div>
 			</div>
-		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Audio Files</div>
-			<div class="AccordionPanelContent">
-				<table class="table table-condensed" spry:region="dsAudioTracks dsAudioClips dsAudioClipFiles">
-				  <thead>
-					<tr>
-						<th colspan="6">Audio Files</th>
-					</tr>
-					<tr>
-					  <th>#</th>
-					  <th>ID</th>
-					  <th>Name</th>
-					  <th>Duration</th>
-					  <th>Timebase</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_audio_file_index_body">
-					<tr spry:select="selected" onclick="dsAudioClips.setCurrentRow({dsAudioClips::ds_RowID});acc1.openNextPanel();" spry:repeat="dsAudioClipFiles">
-					  <td>{dsAudioClipFiles::ds_RowNumberPlus1}</td>
-					  <td>{dsAudioClipFiles::@id}</td>
-					  <td><a href="{dsAudioClipFiles::pathurl}">{dsAudioClipFiles::name}</a></td>
-					  <td>{dsAudioClipFiles::duration}</td>
-					  <td>{dsAudioClipFiles::rate/timebase}</td>
-					  <td><button onclick="xmeml_preview('{dsAudioClipFiles::pathurl}')">...</button></td>
-					</tr>
-					<tr>
-						<td colspan="5">
-							<object data="{dsAudioClipFiles::pathurl}" type="video/quicktime" width="100%" height="100%">
-								<param name="src" value="{dsAudioClipFiles::pathurl}">
-								<param name="controller" value="true">
-								<param name="scale" value="aspect">
-							</object>
-						</td>
-					</tr>
-				  </tbody>
-				</table>
-			</div>
-		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Video Tracks</div>
-			<div class="AccordionPanelContent">
-				<table class="table table-condensed" spry:region="dsVideoTracks">
-				  <thead>
-					<tr>
-						<th colspan="10">Video Tracks</th>
-					</tr>
-					<tr>
-					  <th>Type (A/V)</th>
-					  <th>Track (A#/V#)</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_video_track_index_body" spry:repeatchildren="dsVideoTracks">
-					<tr spry:select="selected" onclick="dsVideoTracks.setCurrentRow({dsVideoTracks::ds_RowID});acc1.openNextPanel();">
-					  <td>Video</td>
-					  <td>{dsVideoTracks::ds_RowNumberPlus1}</td>
-					  <td><button>clips</button></td>
-					</tr>
-				  </tbody>
-				</table>
-			</div>
-		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Video Clips</div>
-			<div class="AccordionPanelContent">
-			   <table class="table table-condensed" spry:region="dsVideoTracks dsVideoClips">
-				  <thead>
-					<tr>
-						<th colspan="10">{dsVideoClips::ds_RowCount} of {dsVideoClips::ds_UnfilteredRowCount} Video Clips (Track {dsVideoTracks::ds_RowNumberPlus1} of {dsVideoTracks::ds_RowCount})</th>
-					</tr>
-					<tr>
-					  <th>Type (A/V)</th>
-					  <th>Track (A#/V#)</th>
-					  <th>Name</th>
-					  <th>Duration (frames)</th>
-					  <th>Start (frame)</th>
-					  <th>End (frame)</th>
-					  <th>In (frame)</th>
-					  <th>Out (frame)</th>
-					  <th>Rate (fps)</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_video_clip_index_body" spry:repeatchildren="dsVideoClips">
-					<tr spry:select="selected" onclick="dsVideoClips.setCurrentRow({dsVideoClips::ds_RowID});acc1.openNextPanel();">
-					  <td>Video</td>
-					  <td>{dsVideoTracks::ds_RowNumberPlus1}</td>
-					  <td>{dsVideoClips::name}&nbsp;</td>
-					  <td>{dsVideoClips::duration}&nbsp;</td>
-					  <td>{dsVideoClips::start}&nbsp;</td>
-					  <td>{dsVideoClips::end}&nbsp;</td>
-					  <td>{dsVideoClips::in}&nbsp;</td>
-					  <td>{dsVideoClips::out}&nbsp;</td>
-					  <td>{dsVideoClips::rate/timebase}&nbsp;</td>
-					  <td><button disabled="disabled">links</button></td>
-					</tr>
-				  </tbody>
-				</table>
-			</div>
-		</div>
-		<div class="AccordionPanel">
-			<div class="AccordionPanelTab">Video Files</div>
-			<div class="AccordionPanelContent">
-				<table class="table table-condensed" spry:region="dsVideoTracks dsVideoClips dsVideoClipFiles">
-				  <thead>
-					<tr>
-						<th colspan="6">Video Files</th>
-					</tr>
-					<tr>
-					  <th>#</th>
-					  <th>ID</th>
-					  <th>Name</th>
-					  <th>Duration</th>
-					  <th>Timebase</th>
-					  <th>Actions</th>
-					</tr>
-				  </thead>
-				  <tbody id="media_video_file_index_body" spry:repeatchildren="dsVideoClipFiles">
-					<tr spry:select="selected" onclick="dsVideoClipFiles.setCurrentRow({dsVideoClipFiles::ds_RowID});acc1.openNextPanel();">
-					  <td>{dsVideoClipFiles::ds_RowNumberPlus1}</td>
-					  <td>{dsVideoClipFiles::@id}</td>
-					  <td><a href="{dsVideoClipFiles::pathurl}">{dsVideoClipFiles::name}</a></td>
-					  <td>{dsVideoClipFiles::duration}</td>
-					  <td>{dsVideoClipFiles::rate/timebase}</td>
-					  <td><button onclick="xmeml_preview('{dsVideoClipFiles::pathurl}')">...</button></td>
-					</tr>
-					<tr>
-						<td colspan="5">
-							<object data="{function::xmeml_video_url}" type="video/quicktime" width="100%" height="100%">
-								<param name="src" value="{function::xmeml_video_url}">
-								<param name="controller" value="true">
-								<param name="scale" value="aspect">
-							</object>
-						</td>
-					</tr>
-				  </tbody>
-				</table>
+			<div class="AccordionPanel" spry:region="dsVideoClips dsVideoClipFiles">
+				<div class="AccordionPanelTab">Video File: {dsVideoClips::name}</div>
+				<div class="AccordionPanelContent" style="background-color: #000000">
+					<video 
+						id="video_preview"
+						height="100%"
+						width="100%"
+						controls
+						crossorigin
+						use-credentials
+						preload="metadata"
+						autoplay
+						poster="{function::xmeml_video_poster_url}"
+						spry:if="'{dsVideoClipFiles::pathurl}'.substr(-5) == '.jpeg'"
+					>
+						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English">
+						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nedelands">
+						Your browser does not support the HTML5 video element
+						<object data="{function::xmeml_video_url}" type="video/quicktime" width="100%" height="100%">
+							<param name="src" value="{function::xmeml_video_url}">
+							<param name="controller" value="true">
+							<param name="scale" value="aspect">
+					
+						</object>
+					</video>
+					<video
+						src="{function::xmeml_video_url}"
+						height="100%"
+						width="100%"
+						controls="true"
+						crossorigin="true"
+						use-credentials="true"
+						preload="auto"
+						autoplay="true"
+						muted="true"
+						spry:if="'{dsVideoClipFiles::pathurl}'.substr(-5) != '.jpeg'"
+					>
+						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English">
+						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nedelands">
+						Your browser does not support the HTML5 video element
+						<object data="{function::xmeml_video_url}" type="video/quicktime" width="100%" height="100%">
+							<param name="src" value="{function::xmeml_video_url}">
+							<param name="controller" value="true">
+							<param name="scale" value="aspect">
+					
+						</object>
+					</video>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -403,6 +490,7 @@ var acc0, acc1; //regions
 var dsSequence, arFrameBuffer, dsFrames, dsAudioTracks, dsAudioClips, dsAudioClipFiles, dsAudioTransitions, dsVideoTracks, dsVideoClips, dsVideoClipFiles, dsVideoClipLinks, dsVideoTransitions;
 	dsSequence = new Spry.Data.XMLDataSet("test.xml", "xmeml/sequence");
 	dsFrames = new Spry.Data.DataSet();
+	dsCursor = new Spry.Data.DataSet();
 // 	dsFrames.setColumnType('frame', 'number');
 	dsFrames.setDataFromArray([{number:0}]);
 // 	dsAudioTracks = new Spry.Data.NestedXMLDataSet(dsSequence, "media/audio/track");
@@ -425,21 +513,41 @@ var dsSequence, arFrameBuffer, dsFrames, dsAudioTracks, dsAudioClips, dsAudioCli
 	var obs = new Object;
 	obs.onDataChanged = function(notifier, data)
 	{
- 		Spry.Debug.trace("generating frame buffer");
-		arFrameBuffer = [];
-		var duration = parseInt(dsSequence.getRowByID(0).duration);
-		for(var i=0; i<duration; i+=25) {
-			arFrameBuffer.push({frame:i});
-		}
-		dsFrames.setDataFromArray(arFrameBuffer);
+		setTimeout(xmeml_init_framebuffer, 1);
 	};
 	dsSequence.addObserver(obs);
 	
 xmeml_init_debug();
 xmeml_init_regions();
 xmeml_init_observer();
-	
+xmeml_init_video_events();
+xmeml_init_clock();
+var framerate = 25; //TODO: timebase rate
+
+function xmeml_init_clock() {
+	var tick = 1000/framerate; //TODO: timebase rate
+	Spry.Debug.trace("initializing clock: " + framerate + " frames per second " + tick + " ms per tick");
+	setInterval(function() {
+		var date = new Date();
+		dsCursor.setDataFromArray([{
+			frame:0,
+			clock: "" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "." + date.getMilliseconds(),
+			video: document.querySelector('video').currentTime,
+			audio: document.querySelector('audio').currentTime
+		}]);
+	}, tick); 
+}
+
 function xmeml_init_data(){
+}
+function xmeml_init_framebuffer(){
+	arFrameBuffer = [];
+	var duration = parseInt(dsSequence.getRowByID(0).duration);
+	Spry.Debug.trace("generating frame buffer: " + duration + " frames");
+	for(var i=0; i<duration; i+=framerate) {
+		arFrameBuffer.push({frame:i});
+	}
+	dsFrames.setDataFromArray(arFrameBuffer);
 }
 function xmeml_init_debug(){
 	var dbg = new Object;
@@ -476,15 +584,34 @@ function xmeml_init_debug(){
 }
 
 function xmeml_init_regions(){
-			acc0 = new Spry.Widget.Accordion("acc0", {useFixedPanelHeights: false, defaultPanel: 0});
+			acc0 = new Spry.Widget.Accordion("acc0", {useFixedPanelHeights: false, defaultPanel: 0, enableAnimation: false});
 			acc1 = new Spry.Widget.Accordion("acc1", {useFixedPanelHeights: false, defaultPanel: -1});
+//			acc2 = new Spry.Widget.Accordion("acc2", {useFixedPanelHeights: true, defaultPanel: 1});
+			acc3 = new Spry.Widget.Accordion("acc3", {useFixedPanelHeights: false, defaultPanel: 0});
+}
+
+function xmeml_init_video_events(){
+	return;
+	var vs = document.getElementsByTagName("video");
+	for(var v in vs){
+		v.addEventListener("seeked", function() { 
+			Spry.Debug.trace("video event: seeked");
+		}, true);
+	}
+
 }
 
 function xmeml_rewite(url) {
 // 	Spry.Debug.trace("xmeml_rewite({url:'"+url+"'})");
+	var url_type = typeof(url);
+	if(url_type !== 'string') {
+		Spry.Debug.trace("xmeml_rewite: expecting typeof url string, got " + url_type);
+		return url;
+	}
 	url = url.replace("C:\\fakepath\\", "");
 	url = url.replace("file://localhost", "file://");
-	return unescape(url);
+	url = unescape(url);
+	return url;
 }
 function xmeml_open(file) {
 	var filename = xmeml_rewite(file);
@@ -496,8 +623,39 @@ function xmeml_preview(file) {
 	var filename = xmeml_rewite();
 	alert(filename);
 }
+function xmeml_video_type(video_url) {
+	//var video_url = xmeml_video_url(region, lookupFunc);
+	switch(true){
+		case video_url.substr(-5) == '.jpeg':
+			return 'still';
+	}
+	return 'video'; //fallback
+}
+function xmeml_video_poster_url(region, lookupFunc) {
+	var video_url = xmeml_rewite(lookupFunc("{dsVideoClipFiles::pathurl}"));
+	if(xmeml_video_type(video_url)=='still')
+		return video_url;
+	return video_url+'.jpeg';
+}
 function xmeml_video_url(region, lookupFunc) {
-	return xmeml_rewite(lookupFunc("{dsVideoClipFiles::pathurl}"));
+//	return xmeml_rewite(lookupFunc("{dsVideoClipFiles::pathurl}"));
+	var video_url = lookupFunc("{dsVideoClipFiles::pathurl}");
+	if(typeof(video_url) !== 'string') {
+		Spry.Debug.trace('xmeml_video_url: expecting pathurl url string, got ' + url_type + ', using @id');
+		video_url = lookupFunc("{dsVideoClipFiles::@id}");
+	}
+	video_url = xmeml_rewite(video_url);
+
+	// add fragment #t=10,20
+	var video_in = lookupFunc("{dsVideoClips::in}");
+		if(typeof(video_in) != 'number') return video_url;
+		video_in = video_in / framerate;
+	var video_out = lookupFunc("{dsVideoClips::out}");
+		if(typeof(video_out) != 'number') return video_url;
+		video_out = video_out / framerate;
+	video_url += "#t=" + video_in + "," + video_out;
+	
+	return video_url;
 }
 function xmeml_video_length(region, lookupFunc) {
 // 	debugger;
@@ -505,13 +663,13 @@ function xmeml_video_length(region, lookupFunc) {
 }
 function xmeml_frame_s1(region, lookupFunc) {
 // 	debugger;
-	return parseInt(lookupFunc("{dsFrames::frame}")) % 25 == 0;
+	return parseInt(lookupFunc("{dsFrames::frame}")) % framerate == 0;
 }
 function xmeml_frame_s10(region, lookupFunc) {
-	return parseInt(lookupFunc("{dsFrames::frame}")) % 250 == 0;
+	return parseInt(lookupFunc("{dsFrames::frame}")) % framerate * 10 == 0;
 }
 function xmeml_frame_time(region, lookupFunc) {
-	var secs = parseInt(lookupFunc("{dsFrames::frame}"))/25
+	var secs = parseInt(lookupFunc("{dsFrames::frame}"))/framerate;
 	var hours = Math.floor(secs / (60 * 60));
    
     var divisor_for_minutes = secs % (60 * 60);
