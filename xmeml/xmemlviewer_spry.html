@@ -92,8 +92,9 @@
 			border: 1px solid #000000;
 			border-bottom: 1px solid #000000;
 		}
-		.audio .track:hover, .audio .track.active, .video .track:hover, .video .track.active {
+		.sequence .label:hover, .audio .track:hover, .audio .track.active, .video .track:hover, .video .track.active {
 			border: 1px solid #999999;
+			cursor: pointer;
 		}
 		.sequence .label, .audio .track .label, .video .track .label {
 			position: fixed;
@@ -162,7 +163,7 @@
 				<div class="AccordionPanelContent" spry:region="dsSequence dsFrames dsAudioTracks dsAudioClips dsAudioTransitions dsVideoTracks dsVideoClips dsVideoTransitions">
 				  <div class="sequence" style="position: relative; width:{dsSequence::duration}px; overflow: hidden; padding-right:50px">
 					<span class="label">Sequence {dsSequence::ds_RowNumberPlus1} XMEML Viewer: {dsSequence::name} {dsSequence::duration}frames {dsSequence::rate.timebase}FPS <a href="#" onclick="xmeml_debug(); return false">debug</a></span>
-					<div class="label"><a href="#" onclick="acc1.openPanel(0);return false">{dsSequence::name}</div>
+					<div class="label" onclick="acc1.openPanel(0);return false">{dsSequence::name}</div>
 					<div class="markers s10" style="width:{dsSequence::duration}px" spry:repeatchildren="dsFrames">
 						<span spry:if="function::xmeml_frame_s10" class="marker s10" style="left:{dsFrames::frame}px">{function::xmeml_frame_time}</span>
 					</div>
@@ -394,8 +395,8 @@
 		<div id="acc3" class="Accordion">
 			<div class="AccordionPanel" spry:region="dsCursor">
 				<div class="AccordionPanelTab">Cursor: {dsCursor::frame}</div>
-				<div class="AccordionPanelContent" style="background-color: #000000; color: #ffffff; font-size: 36px">
-					C:{dsCursor::clock}<br />
+				<div class="AccordionPanelContent" style="background-color: #000000; color: #ffffff; font-size: 36px;">
+					<div style="width: 100%;font-size: 24px; word-break: keep-all">{dsCursor::clock}</div>
 					A:{dsCursor::audio}<br />
 					V:{dsCursor::video}<br />
 				</div>
@@ -406,7 +407,7 @@
 				<div class="AccordionPanelTab">Audio File: {dsAudioClips::name}</div>
 				<div class="AccordionPanelContent" style="background-color: #000000; height: 25px">
 					<audio
-						src="{dsAudioClipFiles::pathurl}"
+						src="{function::xmeml_audio_url}"
 						height="25pxs"
 						width="100%"
 						controls
@@ -414,12 +415,11 @@
 						use-credentials
 						preload="metadata"
 						autoplay
-						no-poster="{dsAudioClipFiles::pathurl}"
 					>
-						<track kind="subtitles" src="{dsAudioClipFiles::pathurl}.en.vtt" srclang="en" label="English">
-						<track kind="subtitles" src="{dsAudioClipFiles::pathurl}.nl.vtt" srclang="sv" label="Nedelands">
+						<track kind="subtitles" src="{function::xmeml_audio_url}.en.vtt" srclang="en" label="English">
+						<track kind="subtitles" src="{function::xmeml_audio_url}.nl.vtt" srclang="sv" label="Nedelands">
 						<object data="{dsAudioClipFiles::pathurl}" type="video/quicktime" width="100%" height="100%">
-							<param name="src" value="{dsAudioClipFiles::pathurl}">
+							<param name="src" value="{function::xmeml_audio_url}">
 							<param name="controller" value="true">
 							<param name="scale" value="aspect">
 						</object>
@@ -490,8 +490,10 @@ var acc0, acc1; //regions
 var dsSequence, arFrameBuffer, dsFrames, dsAudioTracks, dsAudioClips, dsAudioClipFiles, dsAudioTransitions, dsVideoTracks, dsVideoClips, dsVideoClipFiles, dsVideoClipLinks, dsVideoTransitions;
 	dsSequence = new Spry.Data.XMLDataSet("test.xml", "xmeml/sequence");
 	dsFrames = new Spry.Data.DataSet();
-	dsCursor = new Spry.Data.DataSet();
 // 	dsFrames.setColumnType('frame', 'number');
+// 	dsFrames.setColumnType('frame', 'number');
+	dsCursor = new Spry.Data.DataSet();
+	dsCursor.setColumnType('clock', 'date');
 	dsFrames.setDataFromArray([{number:0}]);
 // 	dsAudioTracks = new Spry.Data.NestedXMLDataSet(dsSequence, "media/audio/track");
 // 	dsAudioClips = new Spry.Data.NestedXMLDataSet(dsSequence, "media/audio/track/clipitem");
@@ -523,17 +525,23 @@ xmeml_init_observer();
 xmeml_init_video_events();
 xmeml_init_clock();
 var framerate = 25; //TODO: timebase rate
-
+var clock; // interval thread
 function xmeml_init_clock() {
-	var tick = 1000/framerate; //TODO: timebase rate
+	var tick = 1000/framerate;
 	Spry.Debug.trace("initializing clock: " + framerate + " frames per second " + tick + " ms per tick");
-	setInterval(function() {
+	clock = setInterval(function() {
 		var date = new Date();
+		var audio = document.querySelector('audio');
+		var video = document.querySelector('video');
+		var audio_time = audio ? audio.currentTime : 0;
+		var video_time = video ? video.currentTime : 0;
 		dsCursor.setDataFromArray([{
 			frame:0,
-			clock: "" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "." + date.getMilliseconds(),
-			video: document.querySelector('video').currentTime,
-			audio: document.querySelector('audio').currentTime
+//			clock: date,
+// 			clock: date.toISOString(),
+			clock: "" + date.getFullYear() + "-" + date.getMonth() + "-" + date.getDay() + "T" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "." + date.getMilliseconds(),
+			audio: audio_time,
+			video: video_time
 		}]);
 	}, tick); 
 }
@@ -637,6 +645,24 @@ function xmeml_video_poster_url(region, lookupFunc) {
 		return video_url;
 	return video_url+'.jpeg';
 }
+function xmeml_audio_url(region, lookupFunc) {
+	var audio_url = lookupFunc("{dsAudioClipFiles::pathurl}");
+	if(typeof(audio_url) !== 'string') {
+		Spry.Debug.trace('xmeml_audio_url: expecting pathurl url string, got ' + url_type + ', using @id');
+		audio_url = lookupFunc("{dsAudioClipFiles::@id}");
+	}
+	audio_url = xmeml_rewite(audio_url);
+	// add fragment #t=10,20
+	var audio_in = lookupFunc("{dsAudioClips::in}");
+		if(typeof(audio_in) != 'number') return audio_url;
+		audio_in = audio_in / framerate;
+	var audio_out = lookupFunc("{dsAudioClips::out}");
+		if(typeof(audio_out) != 'number') return audio_url;
+		audio_out = audio_out / framerate;
+	audio_url += "#t=" + audio_in + "," + audio_out;
+	
+}
+
 function xmeml_video_url(region, lookupFunc) {
 //	return xmeml_rewite(lookupFunc("{dsVideoClipFiles::pathurl}"));
 	var video_url = lookupFunc("{dsVideoClipFiles::pathurl}");
