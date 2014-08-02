@@ -1,0 +1,158 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:spry="http://ns.adobe.com/spry">
+<head>
+	<script type="text/javascript" src="lib/spry/js/xpath.js"></script>
+	<script type="text/javascript" src="lib/spry/js/SpryData.js"></script>
+	<script type="text/javascript" src="lib/spry/js/SpryNestedXMLDataSet.js"></script>
+	<script type="text/javascript" src="lib/spry/js/SpryAccordion.js"></script>
+	<script type="text/javascript">
+	<!--
+	var dsSequence = new Spry.Data.XMLDataSet("fcp.xml", "xmeml/sequence");
+	var dsAudioTracks = new Spry.Data.NestedXMLDataSet(dsSequence, "media/audio/track");
+	var dsAudioClips = new Spry.Data.NestedXMLDataSet(dsAudioTracks, "clipitem");
+//  	var dsAudioClips = new Spry.Data.NestedXMLDataSet(dsSequence, "media/audio/track/clipitem");
+	var dsVideoTracks = new Spry.Data.NestedXMLDataSet(dsSequence, "media/video/track");
+	var dsVideoClips = new Spry.Data.NestedXMLDataSet(dsVideoTracks, "clipitem");
+	-->
+	</script>
+</head>
+<body>
+
+<div id="xmeml_viewer" class="panel panel-default" spry:region="dsSequence dsAudioTracks dsAudioClips dsVideoTracks dsVideoClips">
+  <div class="panel-heading">
+  Sequence {dsSequence::ds_RowID} XMEML Viewer: {dsSequence::name} {dsSequence::duration} FPS
+  </div>
+  <!-- panel-heading -->
+  <div class="panel-content">
+    <table class="table table-condensed">
+      <thead>
+      	<tr>
+      		<th colspan="10">Audio Clips</th>
+      	</tr>
+        <tr>
+          <th>Track (A#/V#)</th>
+          <th>Type (A/V)</th>
+          <th>Name</th>
+          <th>Duration</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>In</th>
+          <th>Out</th>
+          <th>Rate</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="media_audio_clip_index_body" spry:repeatchildren="dsAudioClips">
+		<tr>
+		  <td>{dsAudioTracks::ds_RowID}</td>
+		  <td>Audio</td>
+		  <td>{dsAudioClips::name}&nbsp;</td>
+		  <td>{dsAudioClips::duration}&nbsp;</td>
+		  <td>{dsAudioClips::start}&nbsp;</td>
+		  <td>{dsAudioClips::end}&nbsp;</td>
+		  <td>{dsAudioClips::in}&nbsp;</td>
+		  <td>{dsAudioClips::out}&nbsp;</td>
+		  <td>{dsAudioClips::rate/timebase}&nbsp;</td>
+		  <td>links</td>
+		</tr>
+      </tbody>
+    </table>
+    <table class="table table-condensed">
+      <thead>
+      	<tr>
+      		<th colspan="10">Video Clips</th>
+      	</tr>
+        <tr>
+          <th>Track (A#/V#)</th>
+          <th>Type (A/V)</th>
+          <th>Name</th>
+          <th>Duration</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>In</th>
+          <th>Out</th>
+          <th>Rate</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="media_video_clip_index_body" spry:repeatchildren="dsVideoClips">
+		<tr>
+		  <td>{dsVideoTracks::ds_RowID}</td>
+		  <td>Video</td>
+		  <td>{dsVideoClips::name}&nbsp;</td>
+		  <td>{dsVideoClips::duration}&nbsp;</td>
+		  <td>{dsVideoClips::start}&nbsp;</td>
+		  <td>{dsVideoClips::end}&nbsp;</td>
+		  <td>{dsVideoClips::in}&nbsp;</td>
+		  <td>{dsVideoClips::out}&nbsp;</td>
+		  <td>{dsVideoClips::rate/timebase}&nbsp;</td>
+		  <td>links</td>
+		</tr>
+      </tbody>
+    </table>
+    
+<!-- 
+    <table class="table table-condensed">
+      <thead>
+      	<tr>
+      		<th colspan="10">Audio Tracks</th>
+      	</tr>
+      </thead>
+      <tbody id="media_audio_track_index_body" spry:region="dsAudioTracks" spry:repeatchildren="dsAudioTracks">
+        <tr>
+      		<td colspan="10">Audio Track</tdh>
+        </tr>
+      </tbody>
+      <thead>
+      	<tr>
+      		<th colspan="10">Video Tracks</th>
+      	</tr>
+      </thead>
+      <tbody id="media_video_track_index_body" spry:region="dsVideoTracks" spry:repeatchildren="dsVideoTracks">
+        <tr>
+      		<td colspan="10">Video Track</tdh>
+        </tr>
+      </tbody>
+      <thead>
+      	<tr>
+      		<th colspan="10">Clips</th>
+      	</tr>
+        <tr>
+          <th>Track (A#/V#)</th>
+          <th>Type (A/V)</th>
+          <th>Name</th>
+          <th>Duration</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>In</th>
+          <th>Out</th>
+          <th>Rate</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+      <tbody id="media_index_body" spry:region="dsClips" spry:repeatchildren="dsClips">
+		<tr>
+			  <td>{../../}</td>
+			  <td>type</td>
+			  <td>{name}&nbsp;</td>
+			  <td>{duration}&nbsp;</td>
+			  <td>{start}&nbsp;</td>
+			  <td>{end}&nbsp;</td>
+			  <td>{in}&nbsp;</td>
+			  <td>{out}&nbsp;</td>
+			  <td>{rate/timebase}FPS&nbsp;</td>
+			  <td>links</td>
+			</tr>
+      </tbody>
+    </table>
+  </div>
+ -->
+  <!-- panel-content --> 
+  </div> 
+</div>
+<!-- 
+  <div spry:detailregion="dsTracks" class="AccordionPanelContent">
+ -->
+</body>
+</html>
+
