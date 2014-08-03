@@ -152,7 +152,7 @@
 				<div class="AccordionPanelTab">File</div>
 				<div class="AccordionPanelContent">
 					<form>
-						<input type="file" name="file" id="file" onchange="xmeml_open(this.value)"/>
+						<input type="file" name="file" id="file" accept=".xml" onchange="xmeml_open(this.value)"/>
 						<input type="button" value="reload" onclick="xmeml_open(file.value)" />
 					</form>
 						
@@ -163,7 +163,7 @@
 				<div class="AccordionPanelContent" spry:region="dsSequence dsFrames dsAudioTracks dsAudioClips dsAudioTransitions dsVideoTracks dsVideoClips dsVideoTransitions">
 				  <div class="sequence" style="position: relative; width:{dsSequence::duration}px; overflow: hidden; padding-right:50px">
 					<span class="label">Sequence {dsSequence::ds_RowNumberPlus1} XMEML Viewer: {dsSequence::name} {dsSequence::duration}frames {dsSequence::rate.timebase}FPS <a href="#" onclick="xmeml_debug(); return false">debug</a></span>
-					<div class="label" onclick="panel_sequence.openPanel(0);return false">{dsSequence::name}</div>
+					<div class="label" onclick="panel_audio.openPanel(0);panel_video.openPanel(0);return false">{dsSequence::name}</div>
 					<div class="markers s10" style="width:{dsSequence::duration}px" spry:repeatchildren="dsFrames">
 						<span spry:if="function::xmeml_frame_s10" class="marker s10" style="left:{dsFrames::frame}px">{function::xmeml_frame_time}</span>
 					</div>
@@ -392,19 +392,30 @@
 				</div>
 			</div>
 		</div>
-		</div>
 	</div>
 	<div style="width:25%; clear: none; float: left">
-		<div id="acc3" class="Accordion">
+		<div id="panel_clock" class="Accordion">
 			<div class="AccordionPanel" spry:region="dsCursor">
 				<div class="AccordionPanelTab">Cursor: {dsCursor::frame}</div>
 				<div class="AccordionPanelContent" style="background-color: #000000; color: #ffffff; font-size: 36px;">
 					<div style="width: 100%;font-size: 24px; word-break: keep-all">{dsCursor::clock}</div>
-					A:{dsCursor::audio}<br />
-					V:{dsCursor::video}<br />
+					A:{dsCursor::audio_time}<br />
+					V:{dsCursor::video_time}<br />
 				</div>
 			</div>
 		</div>
+		<div id="panel_controls" class="Accordion">
+			<div class="AccordionPanel">
+				<div class="AccordionPanelTab">Controls</div>
+				<div class="AccordionPanelContent" style="background-color: #000000; color: #ffffff; font-size: 36px;">
+					<button id="clock_start" onclick="xmeml_clock_start(this)">Play</button>
+					<button id="clock_stop" onclick="xmeml_clock_stop(this)">Pause</button>
+					<button id="clock_sleep" onclick="xmeml_clock_sleep(this)">Sleep</button>
+					<button id="clock_wake" onclick="xmeml_clock_wake(this)">Wake</button>
+				</div>
+			</div>
+		</div>
+		
 		<div id="panel_player" class="Accordion">
 			<div class="AccordionPanel" spry:region="dsVideoClips dsAudioClipFiles">
 				<div class="AccordionPanelTab">Audio File: {dsAudioClips::name}</div>
@@ -419,12 +430,15 @@
 						preload="metadata"
 						autoplay
 					>
-						<track kind="subtitles" src="{function::xmeml_audio_url}.en.vtt" srclang="en" label="English">
-						<track kind="subtitles" src="{function::xmeml_audio_url}.nl.vtt" srclang="sv" label="Nedelands">
+<!-- 
+						<track kind="subtitles" src="{function::xmeml_audio_url}.en.vtt" srclang="en" label="English" />
+						<track kind="subtitles" src="{function::xmeml_audio_url}.nl.vtt" srclang="sv" label="Nederlands" />
+ -->
+						<track kind="subtitles" src="timecode.0.vtt" srclang="en" label="Timecode" />
 						<object data="{dsAudioClipFiles::pathurl}" type="video/quicktime" width="100%" height="100%">
-							<param name="src" value="{function::xmeml_audio_url}">
-							<param name="controller" value="true">
-							<param name="scale" value="aspect">
+							<param name="src" value="{function::xmeml_audio_url}" />
+							<param name="controller" value="true" />
+							<param name="scale" value="aspect" />
 						</object>
 					</audio>
 				</div>
@@ -444,13 +458,16 @@
 						poster="{function::xmeml_video_poster_url}"
 						spry:if="'{dsVideoClipFiles::pathurl}'.substr(-5) == '.jpeg'"
 					>
-						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English">
-						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nedelands">
+<!-- 
+						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English" />
+						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nederlands" />
+ -->
+						<track kind="subtitles" src="timecode.0.vtt" srclang="en" label="Timecode" />
 						Your browser does not support the HTML5 video element
 						<object data="{function::xmeml_video_url}" type="video/quicktime" width="100%" height="100%">
-							<param name="src" value="{function::xmeml_video_url}">
-							<param name="controller" value="true">
-							<param name="scale" value="aspect">
+							<param name="src" value="{function::xmeml_video_url}" />
+							<param name="controller" value="true" />
+							<param name="scale" value="aspect" />
 					
 						</object>
 					</video>
@@ -466,13 +483,16 @@
 						muted="true"
 						spry:if="'{dsVideoClipFiles::pathurl}'.substr(-5) != '.jpeg'"
 					>
-						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English">
-						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nedelands">
+<!-- 
+						<track kind="subtitles" src="{function::xmeml_video_url}.en.vtt" srclang="en" label="English" />
+						<track kind="subtitles" src="{function::xmeml_video_url}.nl.vtt" srclang="sv" label="Nederlands" />
+ -->
+						<track kind="subtitles" src="timecode.0.vtt" srclang="en" label="Timecode" />
 						Your browser does not support the HTML5 video element
 						<object data="{function::xmeml_video_url}" type="video/quicktime" width="100%" height="100%">
-							<param name="src" value="{function::xmeml_video_url}">
-							<param name="controller" value="true">
-							<param name="scale" value="aspect">
+							<param name="src" value="{function::xmeml_video_url}" />
+							<param name="controller" value="true" />
+							<param name="scale" value="aspect" />
 					
 						</object>
 					</video>
@@ -488,7 +508,7 @@
 	<script type="text/javascript">
 	<!--
 	
-var panel_sequence, panel_audio, panel_video, panel_clock, panel_player; //regions
+var panel_sequence, panel_audio, panel_video, panel_clock, panel_controls, panel_player; //regions
 	
 var dsSequence, arFrameBuffer, dsFrames, dsAudioTracks, dsAudioClips, dsAudioClipFiles, dsAudioTransitions, dsVideoTracks, dsVideoClips, dsVideoClipFiles, dsVideoClipLinks, dsVideoTransitions;
 	dsSequence = new Spry.Data.XMLDataSet("test.xml", "xmeml/sequence");
@@ -521,34 +541,102 @@ var dsSequence, arFrameBuffer, dsFrames, dsAudioTracks, dsAudioClips, dsAudioCli
 		setTimeout(xmeml_init_framebuffer, 1);
 	};
 	dsSequence.addObserver(obs);
+
+
+var oClock = {
+	i: -1,
+	previous: undefined,
+	current: undefined,
+	drift: undefined,
+	next: undefined,
+	tick: function() {
+		this.i++;
+		this.previous = this.current;
+		this.current = new Date();
+		if(this.previous != undefined && this.current != undefined) {
+			if(this.i % framerate == 0) {
+				var a = (this.current.getMinutes() * 1000) + this.current.getMilliseconds(), b = (this.previous.getMinutes() * 1000) + this.previous.getMilliseconds();
+// 				this.drift =  (tick * framerate) + (a <= b ? a - b : b + (a - framerate));			
+ 				this.drift =  ((tick * framerate) - (a - b));
+ 				this.next = tick + (tick - Math.floor(this.drift / framerate));
+				Spry.Debug.trace("clock tick:" + a + ":" + b + " drift:" + this.drift + " next:"+ this.next);
+			}
+			clock = setTimeout(xmeml_clock, tick - this.drift );
+		} else {
+			clock = setTimeout(xmeml_clock, tick);
+		}
+	}
+}
+var framerate = 25; //TODO: timebase rate
+var tick = 1000; // interval
+var clock; // interval thread
 	
 xmeml_init_debug();
 xmeml_init_regions();
 xmeml_init_observer();
-xmeml_init_video_events();
-xmeml_init_clock();
-var framerate = 25; //TODO: timebase rate
-var clock; // interval thread
-function xmeml_init_clock() {
-	var tick = 1000/framerate;
-	Spry.Debug.trace("initializing clock: " + framerate + " frames per second " + tick + " ms per tick");
-	clock = setInterval(function() {
+xmeml_clock_init();
+// xmeml_init_media_events();
+
+function xmeml_clock() {
 		var date = new Date();
+		
+		oClock.tick();
+		
 		var audio = document.querySelector('audio');
 		var video = document.querySelector('video');
 		var audio_time = audio ? audio.currentTime : 0;
 		var video_time = video ? video.currentTime : 0;
+// 		if (audio.ended && video.ended)
+// 			xmeml_clock_sleep();
+// 		else
+// 			xmeml_clock_wake();
+			
 		dsCursor.setDataFromArray([{
 			frame:0,
 //			clock: date,
 // 			clock: date.toISOString(),
 			clock: "" + date.getFullYear() + "-" + date.getMonth() + "-" + date.getDay() + "T" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "." + date.getMilliseconds(),
-			audio: audio_time,
-			video: video_time
+// 			audio_networkState: audio.networkState,
+// 			audio_readyState: audio.readyState,
+			audio_state: undefined,
+			audio_time: audio_time,
+// 			video_networkState: video.networkState,
+// 			video_readyState: video.readyState,
+			video_state: undefined,
+			video_time: video_time
 		}]);
-	}, tick); 
+}
+function xmeml_clock_init() {
+	tick = 1000/framerate;
+	Spry.Debug.trace("initializing clock: " + framerate + " frames per second " + tick + " ms per tick");
+	xmeml_clock_start(document.querySelector('#clock_start')); 
 }
 
+function xmeml_clock_start(caller) {
+//	clock = setInterval(xmeml_clock, tick);
+	clock = setTimeout(xmeml_clock, tick);
+	caller.setAttribute('style', "display: none");
+	caller.nextElementSibling.setAttribute('style', "display: default");
+}
+function xmeml_clock_stop(caller) {
+// 	clock = clearInterval(clock);
+ 	clock = clearTimeout(clock);
+	caller.setAttribute('style', "display: none");
+	caller.previousElementSibling.setAttribute('style', "display: default");
+}
+function xmeml_clock_sleep(caller) {
+// 	clock = clearInterval(clock);
+// 	clock = setInterval(xmeml_clock, 1000);
+	xmeml_clock_stop(document.querySelector('#clock_stop')); 
+	tick = 1000;
+	xmeml_clock_start(document.querySelector('#clock_start')); 
+}
+function xmeml_clock_wake(caller) {
+	xmeml_clock_init();
+}
+function xmeml_clock_powersaver(caller) {
+	
+}
 function xmeml_init_data(){
 }
 function xmeml_init_framebuffer(){
@@ -587,15 +675,23 @@ function xmeml_init_regions(){
 			panel_sequence = new Spry.Widget.Accordion("panel_sequence", {useFixedPanelHeights: false, defaultPanel: 0, enableAnimation: false});
 			panel_audio = new Spry.Widget.Accordion("panel_audio", {useFixedPanelHeights: false, defaultPanel: -1});
 			panel_video = new Spry.Widget.Accordion("panel_video", {useFixedPanelHeights: false, defaultPanel: -1});
+			panel_clock = new Spry.Widget.Accordion("panel_clock", {useFixedPanelHeights: false, defaultPanel: 0});
+			panel_controls = new Spry.Widget.Accordion("panel_controls", {useFixedPanelHeights: false, defaultPanel: 0});
 //			panel_player = new Spry.Widget.Accordion("panel_player", {useFixedPanelHeights: true, defaultPanel: 1});
-			acc3 = new Spry.Widget.Accordion("acc3", {useFixedPanelHeights: false, defaultPanel: 0});
 }
 
-function xmeml_init_video_events(){
-	return;
-	var vs = document.getElementsByTagName("video");
-	for(var v in vs){
-		v.addEventListener("seeked", function() { 
+function xmeml_init_media_events(){
+	var a = document.getElementsByTagName("audio");
+	for(var i = 0; i < a.length; i++){
+		Spry.Debug.trace("hook audio: "+ i);
+		a[i].addEventListener("seeked", function() { 
+			Spry.Debug.trace("audio event: seeked");
+		}, true);
+	}
+	var v = document.getElementsByTagName("video");
+	for(var i = 0; i < v.length; i++){
+		Spry.Debug.trace("hook video: "+ i);
+		v[i].addEventListener("seeked", function() { 
 			Spry.Debug.trace("video event: seeked");
 		}, true);
 	}
@@ -709,29 +805,13 @@ function xmeml_frame_time(region, lookupFunc) {
 function xmeml_init_observer(region) {
 	/* Adding an object as an observer. */
 	var observer = { onDataChanged: function(notifier, data) {
-// Add a fade effect from 100% to 0% opacity on our container div, with a function called when the effect is finished
-// 		var fadeOut = new Spry.Effect.Fade("panel_audio", {duration: 200, from: 100, to: 0, finish: function(){
-// 			// Inject our column of HTML code
-// // 			Spry.Utils.setInnerHTML(myDiv, row["column0"]);
-// 			// Add a fade effect for 0% to 100% on our container div
-// 			var fadeIn = new Spry.Effect.Fade("panel_audio", {duration: 200, from: 0, to: 100});
-// 			// Start the fade in effect
-// 			fadeIn.start();
-// 		}});
-// Start the fade out effect
-// 		fadeOut.start(); 
+		Spry.Debug.trace("onDataChanged: AudioClip, VideoClip");
+		xmeml_init_media_events();
 	}};
-	Spry.Data.Region.addObserver("panel_audio", observer);
-	Spry.Data.Region.addObserver("panel_video", observer);
-	/* Adding a funtion as an observer. */
-// 	function MyObserverFunc(notificationType, notifier, data)
-// 	{
-// 		if (notificationType != "onPostUpdate")
-// 			return;
-// 		var acc = new Spry.Widget.Accordion("Acc1");
-// 	}
-// 	Spry.Data.Region.addObserver("Acc1", myObserverFunc);
-	
+	dsAudioClips.addObserver(observer);
+	dsAudioClipFiles.addObserver(observer);
+	dsVideoClips.addObserver(observer);
+	dsVideoClipFiles.addObserver(observer);
 }
 
 function xmeml_debug() {
